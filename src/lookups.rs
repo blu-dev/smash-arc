@@ -396,6 +396,7 @@ impl FileInfoBucket {
     }
 }
 
+#[allow(dead_code)]
 impl DirInfo {
     fn file_info_range(self) -> Range<usize> {
         let start = self.file_info_start_index as usize;
@@ -413,6 +414,7 @@ impl DirInfo {
 }
 
 impl DirectoryOffset {
+    #[allow(dead_code)]
     fn range(self) -> Range<usize> {
         let start = self.file_start_index as usize;
         let end = start + self.file_count as usize;
