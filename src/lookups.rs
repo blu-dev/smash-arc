@@ -303,6 +303,21 @@ pub trait ArcLookup {
         Ok(offset)
     }
 
+    fn get_shared_data_index(&self) -> u32 {
+        let dirs = self.get_dir_infos();
+        let mut max = 0;
+        for dir in dirs.iter() {
+            if dir.flags.redirected() && !dir.flags.is_symlink() {
+                let folders = self.get_folder_offsets();
+                let data_folder = &folders[dir.path.index() as usize];
+                if data_folder.directory_index != 0xFF_FFFF && max < data_folder.directory_index {
+                    max = data_folder.directory_index;
+                }
+            }
+        }
+        max
+    }
+
     fn get_file_metadata<Hash: Into<Hash40>>(&self, hash: Hash, region: Region) -> Result<FileMetadata, LookupError> {
         fn inner<Arc: ArcLookup + ?Sized>(arc: &Arc, hash: Hash40, region: Region) -> Result<FileMetadata, LookupError> {
             match arc.get_file_path_index_from_hash(hash) {
@@ -398,14 +413,14 @@ impl FileInfoBucket {
 
 #[allow(dead_code)]
 impl DirInfo {
-    fn file_info_range(self) -> Range<usize> {
+    pub fn file_info_range(self) -> Range<usize> {
         let start = self.file_info_start_index as usize;
         let end = start + self.file_count as usize;
 
         start..end
     }
 
-    fn children_range(self) -> Range<usize> {
+    pub fn children_range(self) -> Range<usize> {
         let start = self.child_dir_start_index as usize;
         let end = start + self.child_dir_count as usize;
 
@@ -415,7 +430,7 @@ impl DirInfo {
 
 impl DirectoryOffset {
     #[allow(dead_code)]
-    fn range(self) -> Range<usize> {
+    pub fn range(self) -> Range<usize> {
         let start = self.file_start_index as usize;
         let end = start + self.file_count as usize;
 
